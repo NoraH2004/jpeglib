@@ -12,12 +12,20 @@ Python envelope for the popular C library libjpeg for handling JPEG files.
 
 ## Installation
 
-Simply install the package with pip3
+Simply install the latest version of the package with pip3
 
 
 ```bash
 pip install jpeglib
 ```
+
+To install the package with *all the libjpeg versions inside*, type
+
+```bash
+pip install git+https://www.github.com/martinbenes1996/jpeglib.git@versions
+```
+
+> :warning: This method downloads **dev version**, which might be broken and takes longer to install.
 
 ## Usage
 
