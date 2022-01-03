@@ -5,7 +5,16 @@ import os
 __version__ = os.environ.get('VERSION_NEW', '0.7.0')
 libjpeg_versions = {
   '6b': (None,60),
+  '7': (None,70),
+  '8': (None,80),
+  '8a': (None,80),
+  '8b': (None,80),
+  '8c': (None,80),
   '8d': (None,80),
+  '9': (None,90),
+  '9a': (None,90),
+  '9b': (None,90),
+  '9c': (None,90),
   '9d': (None,90),
   'turbo210': ('2.1.0',210)
 }
@@ -37,6 +46,8 @@ for v in libjpeg_versions:
   package_name = 'libjpeg'
   (Path(clib) / 'jconfig.h').touch()
   (Path(clib) / 'vjpeglib.h').touch()
+  with open(Path(clib) / 'vjpeglib.h', 'w') as fp:
+    fp.writelines(['#include "jpeglib.h"'])
   if is_turbo:
     package_name += '-turbo'
     (Path(clib) / 'jconfigint.h').touch()

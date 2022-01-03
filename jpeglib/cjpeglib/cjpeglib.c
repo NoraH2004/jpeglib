@@ -31,7 +31,7 @@ extern "C" {
 #define WRITE_ADOBE_MARKER 0x800
 #define CCIR601_SAMPLING 0x1000
 
-GLOBAL(long) jround_up (long a, long b);
+long jround_up (long a, long b);
 
 // void error_exit (j_common_ptr cinfo)
 // {
@@ -361,7 +361,7 @@ int write_jpeg_dct(
     }
     //fprintf(stderr, "ready to write coefficient\n");
   }
-  #if JPEG_LIB_VERSION >= 80
+  #if JPEG_LIB_VERSION >= 70
   jpeg_calc_jpeg_dimensions(&cinfo_out);
   #endif
   //fprintf(stderr, "before writing coefficients\n");
