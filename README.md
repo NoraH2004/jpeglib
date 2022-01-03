@@ -6,26 +6,29 @@
 
 # jpeglib
 
+> :warning: This is *versions* branch, containing all the libjpeg versions. The main branch only contains 6b, 8d and 9d.
+
 Python envelope for the popular C library libjpeg for handling JPEG files.
 
 *libjpeg* offers full control over compression and decompression and exposes DCT coefficients and quantization tables.
 
 ## Installation
 
-Simply install the latest version of the package with pip3
+Install the package with *all the libjpeg versions inside*, type
 
+```bash
+pip install -U --no-cache-dir git+https://www.github.com/martinbenes1996/jpeglib.git@versions
+```
+
+> :warning: This branch takes longer to install, as there are all the libjpeg versions to build.
+
+The latest version of the package from pypi can be installed with
 
 ```bash
 pip install jpeglib
 ```
 
-To install the package with *all the libjpeg versions inside*, type
 
-```bash
-pip install git+https://www.github.com/martinbenes1996/jpeglib.git@versions
-```
-
-> :warning: This method downloads **dev version**, which might be broken and takes longer to install.
 
 ## Usage
 
@@ -91,8 +94,8 @@ It is possible to choose, which version of libjpeg should be used.
 jpeglib.version.set('6b')
 ```
 
-Currently `jpeglib` supports the most popular versions 6b and 8d. Their source codes is baked inside the package
-and thus distributed with it, avoiding external dependency.
+Branch *versions* supports all the versions of libjpeg from *6b* (*6b*,*7*,*8*,*8a*,*8b*,*8c*,*8d*,*9*,*9a*,*9b*,*9c*,*9d*).
+Their source codes is baked inside the package and thus distributed with it, avoiding external dependency.
 
 Get currently used libjpeg version by
 
