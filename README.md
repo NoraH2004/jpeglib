@@ -30,7 +30,6 @@ pip install jpeglib
 ```
 
 
-
 ## Usage
 
 Import the library in Python 3
