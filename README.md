@@ -17,6 +17,7 @@ Python envelope for the popular C library libjpeg for handling JPEG files.
 Install the package with *all the libjpeg versions inside*, type
 
 ```bash
+pip uninstall jpeglib
 pip install -U --no-cache-dir git+https://www.github.com/martinbenes1996/jpeglib.git@versions
 ```
 
