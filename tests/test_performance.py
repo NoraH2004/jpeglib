@@ -34,6 +34,7 @@ class TestPerformance(unittest.TestCase):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         # test it isn't more than 3x slower
         max_3x_slower = ttest_ind(np.array(pil)*3, stego, alternative='less')
 <<<<<<< HEAD
@@ -53,10 +54,13 @@ class TestPerformance(unittest.TestCase):
 =======
 =======
 >>>>>>> 992a41f (test of performance (5x slower))
+=======
+>>>>>>> 025d9e9 (logging another)
         # test it isn't more than 3x slower
         max_3x_slower = ttest_ind(np.array(pil)*3, stego, alternative='less')
         logging.info('performance %.2fs vs. %.2fs of PIL' % (np.mean(pil), np.mean(stego)))
         self.assertGreater(max_3x_slower.pvalue, .05)
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 1f192fc (logging another)
 =======
@@ -66,6 +70,8 @@ class TestPerformance(unittest.TestCase):
         self.assertGreater(max_5x_slower.pvalue, .05)
 >>>>>>> 52ea8bd (test of performance (5x slower))
 >>>>>>> 992a41f (test of performance (5x slower))
+=======
+>>>>>>> 025d9e9 (logging another)
     
     def test_writing(self):
         pass
