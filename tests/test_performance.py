@@ -52,10 +52,7 @@ class TestPerformance(unittest.TestCase):
 =======
         # test it isn't more than 3x slower
         max_3x_slower = ttest_ind(np.array(pil)*3, stego, alternative='less')
-<<<<<<< HEAD
         logging.info('performance %.2fs vs. %.2fs of PIL' % (np.mean(pil), np.mean(stego)))
-=======
->>>>>>> 52a0254 (3x slower at most)
         self.assertGreater(max_3x_slower.pvalue, .05)
 >>>>>>> 1f192fc (logging another)
     
