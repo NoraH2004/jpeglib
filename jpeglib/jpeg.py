@@ -175,7 +175,7 @@ class JPEG:
         return spatial
 
     def write_spatial(self, dstfile, data=None, in_color_space=None, dct_method="JDCT_ISLOW",
-                      samp_factor=None, qt=100, smoothing_factor=None, flags=[]):
+                      samp_factor=None, qt=75, smoothing_factor=None, flags=['DO_FANCY_UPSAMPLING']):
         """Writes spatial image representation (i.e. RGB) to a file.
         
         :param dstfile: Destination file name.
@@ -503,15 +503,16 @@ class JPEG:
                 hmin,wmin = min(hs),min(ws)
                 hs,ws = [round(h/hmin) for h in hs],[round(w/wmin) for w in ws]
                 samp_factor = [[h,w] for h,w in zip(hs,ws)]
-        if samp_factor is None:
-            samp_factor = [[2,2],[1,1],[1,1]]
-        samp_factor = np.array(samp_factor, dtype=np.int32)
-        if np.sum(np.prod(samp_factor, axis=1)) > 10:
-            raise Exception("linear combination of samp_factor greater than 10")
-        if np.any(~np.isin(samp_factor,[1,2,3,4])):
-            raise Exception("factors not in 1,2,3,4")
+        #if samp_factor is None:
+        #    samp_factor = [[1,1],[1,1],[1,1]] # only works for RGB
+        if samp_factor is not None:
+            samp_factor = np.array(samp_factor, dtype=np.int32)
+            if np.sum(np.prod(samp_factor, axis=1)) > 10:
+                raise Exception("linear combination of samp_factor greater than 10")
+            if np.any(~np.isin(samp_factor,[1,2,3,4])):
+                raise Exception("factors not in 1,2,3,4")
 
-        self._samp_factor = np.ctypeslib.as_ctypes(samp_factor)
+        self._samp_factor = np.ctypeslib.as_ctypes(samp_factor) if samp_factor else None
         return self._samp_factor
     def _parse_quality(self, quality):
         if quality is None: # not specified
@@ -523,7 +524,7 @@ class JPEG:
             try:
                 quality = int(quality)
                 qt = None
-            # quantization table
+            # quantization table    
             except:
                 qt = np.array(quality, dtype=np.uint16).reshape(2,64)
                 qt = self._im_qt = np.ctypeslib.as_ctypes(qt)
