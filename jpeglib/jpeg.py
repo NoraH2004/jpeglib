@@ -512,7 +512,7 @@ class JPEG:
             if np.any(~np.isin(samp_factor,[1,2,3,4])):
                 raise Exception("factors not in 1,2,3,4")
 
-        self._samp_factor = np.ctypeslib.as_ctypes(samp_factor) if samp_factor else None
+        self._samp_factor = np.ctypeslib.as_ctypes(samp_factor) if samp_factor is not None else None
         return self._samp_factor
     def _parse_quality(self, quality):
         if quality is None: # not specified
