@@ -2,7 +2,7 @@
 
 # versions
 import os
-__version__ = os.environ.get('VERSION_NEW', '0.8.1')
+__version__ = os.environ.get('VERSION_NEW', '0.8.2')
 libjpeg_versions = {
   '6b': (None,60),
   '7': (None,70),
@@ -16,7 +16,8 @@ libjpeg_versions = {
   '9b': (None,90),
   '9c': (None,90),
   '9d': (None,90),
-  'turbo210': ('2.1.0',210)
+  'turbo210': ('2.1.0',210),
+  'mozjpeg403': ('4.0.3',403)
 }
 
 # requirements
@@ -39,7 +40,9 @@ cfiles = {}
 hfiles = {}
 cjpeglib = {}
 for v in libjpeg_versions:
-  is_turbo = v[:5] == "turbo"
+  is_moz = v[:3] == "moz"
+  is_turbo = v[:5] == "turbo" or is_moz
+  
   clib = f'jpeglib/cjpeglib/{v}'
   
   # create missing
@@ -69,15 +72,26 @@ for v in libjpeg_versions:
   hfiles[v] = [f for f in files if f[-2:] == '.h']
   sources = ['jpeglib/cjpeglib/cjpeglib.c',*cfiles[v]]
   
-  turbo_macros = [
-    ("JPEG_LIB_VERSION",70),
-    ("INLINE","__inline__"),
-    ("PACKAGE_NAME",f"\"{package_name}\""),
-    ("BUILD",f"\"unknown\""),
-    ("VERSION",f"\"{libjpeg_versions[v][0]}\""),
-    ("SIZEOF_SIZE_T",int(ctypes.sizeof(ctypes.c_size_t))),
-    ("THREAD_LOCAL", "__thread")
-  ] if is_turbo else []
+  macros = [
+    ("BITS_IN_JSAMPLE",8),
+    ("HAVE_STDLIB_H",1),
+    ("LIBVERSION",libjpeg_versions[v][1]),
+    ("HAVE_PROTOTYPES",1),
+  ]
+  if is_turbo:
+    macros += [
+      ("JPEG_LIB_VERSION",80),#70),
+      ("INLINE","__inline__"),
+      ("PACKAGE_NAME",f"\"{package_name}\""),
+      ("BUILD",f"\"unknown\""),
+      ("VERSION",f"\"{libjpeg_versions[v][0]}\""),
+      ("SIZEOF_SIZE_T",int(ctypes.sizeof(ctypes.c_size_t))),
+      ("THREAD_LOCAL", "__thread")
+    ]
+  if is_moz:
+    macros += [
+      ('C_ARITH_CODING_SUPPORTED',1)
+    ]
 
   cjpeglib[v] = setuptools.Extension(
     name = f"jpeglib/cjpeglib/cjpeglib_{v}",
@@ -85,13 +99,7 @@ for v in libjpeg_versions:
     include_dirs=['./jpeglib/cjpeglib',f'./{clib}'],#[f'./{clib}'],
     sources = sources,
     headers = hfiles[v],
-    define_macros = [
-      ("BITS_IN_JSAMPLE",8),
-      ("HAVE_STDLIB_H",1),
-      ("LIBVERSION",libjpeg_versions[v][1]),
-      ("HAVE_PROTOTYPES",1),
-      *turbo_macros
-    ],
+    define_macros = macros,
     extra_compile_args=["-fPIC","-g"],
     language="c",
   )
@@ -114,7 +122,7 @@ class custom_build_ext(build_ext):
         # 'set_link_objects', 'set_runtime_library_dirs', 'shared_lib_extension', 'shared_lib_format', 'shared_object_filename',
         # 'spawn', 'src_extensions', 'static_lib_extension', 'static_lib_format', 'undefine_macro', 'verbose', 'warn',
         # 'xcode_stub_lib_extension', 'xcode_stub_lib_format'
-        #print("==========", self.compiler.library_dirs)
+        #self.compiler.set_include_dirs([])
         build_ext.build_extensions(self)
         
 
