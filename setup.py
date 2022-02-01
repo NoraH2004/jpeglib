@@ -3,20 +3,21 @@
 import os
 __version__ = os.environ.get('VERSION_NEW', '0.8.2')
 libjpeg_versions = {
-  '6b': (None,60),
-  '7': (None,70),
-  '8': (None,80),
-  '8a': (None,80),
-  '8b': (None,80),
-  '8c': (None,80),
-  '8d': (None,80),
-  '9': (None,90),
-  '9a': (None,90),
-  '9b': (None,90),
-  '9c': (None,90),
-  '9d': (None,90),
-  'turbo210': ('2.1.0',210),
-  'mozjpeg403': ('4.0.3',403)
+  # '6b': (None,60),
+  # '7': (None,70),
+  # '8': (None,80),
+  # '8a': (None,80),
+  # '8b': (None,80),
+  # '8c': (None,80),
+  # '8d': (None,80),
+  # '9': (None,90),
+  # '9a': (None,90),
+  # '9b': (None,90),
+  # '9c': (None,90),
+  # '9d': (None,90),
+  '9e': (None,90),
+  # 'turbo210': ('2.1.0',210),
+  # 'mozjpeg403': ('4.0.3',403)
 }
 
 # requirements
@@ -59,6 +60,7 @@ for v in libjpeg_versions:
                           'djpeg','cjpeg','rdjpgcom','wrjpgcom','cdjpeg','jpegtran', # executables
                           'rdbmp','wrbmp','rdcolmap','rdppm','wrppm','rdtarga','wrtarga','rdrle','wrrle','rdgif','wrgif','rdswitch', # others
                           'example', # example
+                          'cjpegalt','djpegalt',
                           #'jerror',
                           # turbo
                           'jccolext','jdcolext','jdcol565','jstdhuff',

@@ -18,7 +18,7 @@ class version:
         """
         if version in {'6','6b'}:
             CJpegLib.set_version(version='6b')
-        elif version in {'7','8','8a','8b','8c','8d','9','9a','9b','9c','9d'}:
+        elif version in {'7','8','8a','8b','8c','8d','9','9a','9b','9c','9d','9e'}:
             CJpegLib.set_version(version=version)
         elif version in {'turbo2.1.0','turbo2.1','turbo210','turbo21'}:
             CJpegLib.set_version(version='turbo210')
