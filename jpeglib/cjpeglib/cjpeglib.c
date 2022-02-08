@@ -17,7 +17,7 @@ extern "C" {
 // #include "jmorecfg.h"
 // #endif
 
-#define DO_FANCY_UPSAMPLING 0x1
+#define DO_FANCY_SAMPLING 0x1
 #define DO_BLOCK_SMOOTHING 0x2
 #define TWO_PASS_QUANTIZE 0x4
 #define ENABLE_1PASS_QUANT 0x8
@@ -430,7 +430,7 @@ int read_jpeg_spatial(
   if(dither_mode >= 0) cinfo.dither_mode = dither_mode;
   if(dct_method >= 0) cinfo.dct_method = dct_method;
   
-  cinfo.do_fancy_upsampling   = 0 != (flags & DO_FANCY_UPSAMPLING);
+  cinfo.do_fancy_upsampling   = 0 != (flags & DO_FANCY_SAMPLING);
   cinfo.do_block_smoothing    = 0 != (flags & DO_BLOCK_SMOOTHING);
   cinfo.quantize_colors       = 0 != (flags & QUANTIZE_COLORS);
   
@@ -578,12 +578,16 @@ int write_jpeg_spatial(
   }
   //fprintf(stderr, "colorspace conversion %d -> %d\n", cinfo.in_color_space, cinfo.jpeg_color_space);
   
-  cinfo.progressive_mode   = 0 != (flags & PROGRESSIVE_MODE);
-  cinfo.optimize_coding    = 0 != (flags & OPTIMIZE_CODING);
-  cinfo.arith_code         = 0 != (flags & ARITH_CODE);
-  cinfo.write_JFIF_header  = 0 != (flags & WRITE_JFIF_HEADER);
-  cinfo.write_Adobe_marker = 0 != (flags & WRITE_ADOBE_MARKER);
-  cinfo.CCIR601_sampling   = 0 != (flags & CCIR601_SAMPLING);
+
+  #if JPEG_LIB_VERSION >= 70
+  cinfo.do_fancy_downsampling = 0 != (flags & DO_FANCY_SAMPLING);
+  #endif
+  cinfo.progressive_mode      = 0 != (flags & PROGRESSIVE_MODE);
+  cinfo.optimize_coding       = 0 != (flags & OPTIMIZE_CODING);
+  cinfo.arith_code            = 0 != (flags & ARITH_CODE);
+  cinfo.write_JFIF_header     = 0 != (flags & WRITE_JFIF_HEADER);
+  cinfo.write_Adobe_marker    = 0 != (flags & WRITE_ADOBE_MARKER);
+  cinfo.CCIR601_sampling      = 0 != (flags & CCIR601_SAMPLING);
 
   // https://gist.github.com/kentakuramochi/f64e7646f1db8335c80f131be8359044
 

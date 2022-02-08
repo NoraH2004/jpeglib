@@ -44,7 +44,7 @@ class CJpegLib:
         if status == 0: raise IOError(f"writing RGB to {dstfile} failed")
         
     MASKS = {
-        "DO_FANCY_UPSAMPLING": 0x1,
+        "DO_FANCY_SAMPLING": 0x1, "DO_FANCY_UPSAMPLING": 0x1, "DO_FANCY_DOWNSAMPLING": 0x1,
         "DO_BLOCK_SMOOTHING": 0x2,
         "TWO_PASS_QUANTIZE": 0x4,
         "ENABLE_1PASS_QUANT": 0x8,
