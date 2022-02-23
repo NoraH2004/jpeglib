@@ -615,10 +615,11 @@ int write_jpeg_spatial(
   }
   //fprintf(stderr, "colorspace conversion %d -> %d\n", cinfo.in_color_space, cinfo.jpeg_color_space);
   
-  #if JPEG_LIB_VERSION >= 70
-  if (overwrite_flag(flags, DO_FANCY_UPSAMPLING))
-    cinfo.do_fancy_downsampling = 0 != (flags & DO_FANCY_UPSAMPLING);
-  #endif
+
+  // #if JPEG_LIB_VERSION >= 70
+  // if (overwrite_flag(flags, DO_FANCY_UPSAMPLING))
+  //   cinfo.do_fancy_downsampling = flag_is_set(flags, DO_FANCY_UPSAMPLING);
+  // #endif
   if (overwrite_flag(flags, PROGRESSIVE_MODE))
     cinfo.progressive_mode   = flag_is_set(flags, PROGRESSIVE_MODE);
   if (overwrite_flag(flags, OPTIMIZE_CODING))
