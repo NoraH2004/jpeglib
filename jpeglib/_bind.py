@@ -61,11 +61,26 @@ class CJpegLib:
 
     @classmethod
     def flags_to_mask(cls, flags):
-        mask = 0
+        mask = ~0
         if flags is None: return mask
         for flag in flags:
-            mask = mask | cls.MASKS[flag.upper()]
-        return ctypes.c_ulong(mask)
+            # print(f"flag {flag}:")
+            # parse sign
+            sign = '-' if flag[0] == '-' else '+'
+            if not flag[0].isalpha(): flag = flag[1:]
+            # get flags
+            flagbit = cls.MASKS[flag.upper()]
+            defbit = cls.MASKS[flag.upper()] << 1
+            # map
+            mask ^= defbit # reset default value
+            if sign == '-':
+                mask &= ~flagbit # erase bit
+            # print('  flagbit:', bin(~flagbit + 2**32).replace("0b", "").zfill(32))
+            # print('  defbit:', bin(~defbit + 2**32).replace("0b", "").zfill(32))
+            # print('  = ', bin(mask + 2**32).replace("0b", "").zfill(32))
+            
+        # print('final:', mask + 2**32)
+        return ctypes.c_ulonglong(mask)
 
     _lib = None
     version = None

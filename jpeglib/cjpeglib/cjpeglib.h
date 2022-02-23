@@ -36,7 +36,7 @@ int read_jpeg_spatial(
     int out_color_space,
     int dither_mode,
     int dct_method,
-    unsigned long flags
+    unsigned long long flags
 );
 
 int write_jpeg_spatial(
@@ -51,7 +51,7 @@ int write_jpeg_spatial(
     unsigned short *qt,
     short quality,
     short smoothing_factor,
-    unsigned long flags
+    unsigned long long flags
 );
 
 //int jpeg_lib_version(void) { return JPEG_LIB_VERSION; }
