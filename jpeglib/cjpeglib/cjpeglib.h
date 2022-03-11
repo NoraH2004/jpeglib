@@ -28,6 +28,7 @@ int write_jpeg_dct(
 );
 
 // ----------- RGB -------------
+typedef unsigned long BITMASK;
 int read_jpeg_spatial(
     const char *srcfile,
     unsigned char *rgb,
@@ -36,10 +37,9 @@ int read_jpeg_spatial(
     int out_color_space,
     int dither_mode,
     int dct_method,
-    unsigned long flags
+    BITMASK flags
 );
 
-typedef unsigned long BITMASK;
 int write_jpeg_spatial(
     const char *srcfile,
     const char *dstfile,
