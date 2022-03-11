@@ -533,7 +533,6 @@ int write_jpeg_spatial(
   short smoothing_factor,
   BITMASK flags
 ) {
-  fprintf(stderr, "received flags: %x\n", flags);
 
   // allocate
   struct jpeg_compress_struct cinfo;
@@ -612,14 +611,8 @@ int write_jpeg_spatial(
     cinfo.in_color_space = in_color_space;
 
   #if JPEG_LIB_VERSION >= 70
-  if (overwrite_flag(flags, DO_FANCY_UPSAMPLING)) {
-    fprintf(stderr, "-> Overwriting DO_FANCY_UPSAMPLING to %d.\n", flag_is_set(flags, DO_FANCY_UPSAMPLING));
+  if (overwrite_flag(flags, DO_FANCY_UPSAMPLING))
     cinfo.do_fancy_downsampling = flag_is_set(flags, DO_FANCY_UPSAMPLING);
-  } else {
-    fprintf(stderr, "-> Leaving DO_FANCY_UPSAMPLING default (%d).\n", cinfo.do_fancy_downsampling);
-  }
-  #else
-    fprintf(stderr, "-> Ignoring settings of DO_FANCY_UPSAMPLING.\n");
   #endif
   if (overwrite_flag(flags, PROGRESSIVE_MODE))
     cinfo.progressive_mode   = flag_is_set(flags, PROGRESSIVE_MODE);
