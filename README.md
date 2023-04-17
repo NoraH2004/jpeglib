@@ -1,9 +1,15 @@
 [![PyPI version](https://badge.fury.io/py/jpeglib.svg)](https://pypi.org/project/jpeglib/)
+[![Commit CI/CD](https://github.com/martinbenes1996/jpeglib/actions/workflows/on_commit.yml/badge.svg?branch=master)](https://github.com/martinbenes1996/jpeglib/actions/workflows/on_commit.yml)
+[![Release CI/CD](https://github.com/martinbenes1996/jpeglib/actions/workflows/on_release.yml/badge.svg)](https://github.com/martinbenes1996/jpeglib/actions/workflows/on_release.yml)
 [![Documentation Status](https://readthedocs.org/projects/jpeglib/badge/?version=latest)](https://jpeglib.readthedocs.io/)
-[![GitHub](https://img.shields.io/github/stars/martinbenes1996/jpeglib.svg)](https://GitHub.com/martinbenes1996/jpeglib)
 [![PyPI downloads](https://img.shields.io/pypi/dm/jpeglib)](https://pypi.org/project/jpeglib/)
+[![Stars](https://img.shields.io/github/stars/martinbenes1996/jpeglib.svg)](https://GitHub.com/martinbenes1996/jpeglib)
+[![Contributors](https://img.shields.io/github/contributors/martinbenes1996/jpeglib)](https://GitHub.com/martinbenes1996/jpeglib)
+[![Wheel](https://img.shields.io/pypi/wheel/jpeglib)](https://pypi.org/project/jpeglib/)
+[![Status](https://img.shields.io/pypi/status/jpeglib)](https://pypi.com/project/jpeglib/)
 [![PyPi license](https://badgen.net/pypi/license/pip/)](https://pypi.com/project/jpeglib/)
-![Unittests](https://github.com/martinbenes1996/jpeglib/actions/workflows/unittests_on_commit.yml/badge.svg)
+[![Last commit](https://img.shields.io/github/last-commit/martinbenes1996/jpeglib)](https://GitHub.com/martinbenes1996/jpeglib)
+
 
 # jpeglib
 
@@ -20,6 +26,9 @@ Simply install the package with pip3
 pip install jpeglib
 ```
 
+
+> :warning: This will install `jpeglib` together with multiple versions of libjpeg, libjpeg-turbo and mozjpeg. For common architectures/OS we provide prebuilt wheels, but installing from source takes couple of minutes.
+
 ## Usage
 
 Import the library in Python 3
@@ -27,15 +36,6 @@ Import the library in Python 3
 ```python
 import jpeglib
 ```
-
-To install the dev version with *all the libjpeg versions inside*, type
-
-```bash
-pip uninstall jpeglib
-pip install -U --no-cache-dir git+https://www.github.com/martinbenes1996/jpeglib.git@versions
-```
-
-> :warning: Branch *versions* is dev so it is less stable and takes longer to install than the package.
 
 ### DCT
 
@@ -93,7 +93,18 @@ Get currently used libjpeg version by
 version = jpeglib.version.get()
 ```
 
+You can also set a libjpeg version for a scope only.
+
+```python
+jpeglib.version.set('6b')
+im = jpeglib.read_spatial('image.jpeg') # using 6b
+with jpeglib.version('9e'):
+    im = jpeglib.read_spatial('image.jpeg') # using 9e
+im = jpeglib.read_spatial('image.jpeg') # using 6b again
+```
+
 
 ## Credits
 
-Developed by [Martin Benes](https://github.com/martinbenes1996).
+Developed by [Martin Benes](https://github.com/martinbenes1996), Universität Innsbruck, 2023.
+

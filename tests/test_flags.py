@@ -1,62 +1,58 @@
+"""
+
+Author: Martin Benes
+Affiliation: Universitaet Innsbruck
+"""
 
 import logging
 import numpy as np
-import os
-import shutil
-import sys
 import tempfile
 import unittest
 
-sys.path.append('.')
 import jpeglib
 
+
 class TestFlags(unittest.TestCase):
-	logger = logging.getLogger(__name__)
-	def setUp(self):
-		self.tmp = tempfile.NamedTemporaryFile(suffix='.jpeg')
-	def tearDown(self):
-		del self.tmp
-	
-	# def test_fancy_upsampling(self):
-		
-	# 	jpeglib.version.set('6b')
-	# 	with jpeglib.JPEG("examples/IMG_0791.jpeg") as im:
-	# 		print("default flags")
-	# 		x_def = im.read_spatial(flags = [])
-	# 		print("+DO_FANCY_UPSAMPLING")
-	# 		x_fu = im.read_spatial(flags = ['+DO_FANCY_UPSAMPLING'])
-	# 		print("-DO_FANCY_UPSAMPLING")
-	# 		x_ss = im.read_spatial(flags = ['-DO_FANCY_UPSAMPLING'])
-	# 	self.assertTrue((x_def == x_fu).all())
-	# 	self.assertTrue((x_def != x_ss).any())
+    logger = logging.getLogger(__name__)
 
-	def test_fancy_downsampling(self):
-		jpeglib.version.set('8d')
-		with jpeglib.JPEG("examples/IMG_0791.jpeg") as im:
-			x = im.read_spatial(flags = ['-DO_FANCY_DOWNSAMPLING'])
+    def setUp(self):
+        self.tmp = tempfile.NamedTemporaryFile(suffix='.jpeg')
 
-		# default flags
-		with jpeglib.JPEG() as im:
-			im.write_spatial(x, self.tmp.name, flags = [])
-		with jpeglib.JPEG(self.tmp.name) as im:
-			Y_def, CbCr_def, qt_def = im.read_dct()
-		
-		# fancy upsampling
-		with tempfile.NamedTemporaryFile() as tmp:
-			with jpeglib.JPEG() as im:
-				im.write_spatial(x, tmp.name, flags = ['+DO_FANCY_DOWNSAMPLING'])
-			with jpeglib.JPEG(tmp.name) as im:
-				Y_fu, CbCr_fu, qt_fu = im.read_dct()
-		# simple scaling
-		with tempfile.NamedTemporaryFile() as tmp:
-			with jpeglib.JPEG() as im:
-				im.write_spatial(x, tmp.name, flags = ['-DO_FANCY_DOWNSAMPLING'])
-			with jpeglib.JPEG(tmp.name) as im:
-				Y_ss, CbCr_ss, qt_ss = im.read_dct()
-		
-		np.testing.assert_array_equal(Y_def, Y_fu)
-		np.testing.assert_array_equal(CbCr_def, CbCr_fu)
-  
-		# self.assertFalse((Y_fu == Y_ss).all())
-		# self.assertTrue((CbCr_fu == CbCr_ss).all())
+    def tearDown(self):
+        self.tmp.close()
+        del self.tmp
 
+    def test_fancy_upsampling(self):
+        self.logger.info("test_fancy_upsampling")
+        jpeglib.version.set('8')
+        fname = 'examples/IMG_0791.jpeg'
+        im_def = jpeglib.read_spatial(fname, flags=[])
+        im_fu = jpeglib.read_spatial(fname, flags=['+DO_FANCY_UPSAMPLING'])
+        im_ss = jpeglib.read_spatial(fname, flags=['-DO_FANCY_UPSAMPLING'])
+        np.testing.assert_array_equal(im_def.spatial, im_fu.spatial)
+        self.assertTrue((im_def.spatial != im_ss.spatial).any())
+
+    def test_fancy_downsampling(self):
+        self.logger.info("test_fancy_downsampling")
+        jpeglib.version.set('9')
+        im = jpeglib.read_spatial('examples/IMG_0311.jpeg')
+
+        # default
+        im.write_spatial(self.tmp.name, flags=[])
+        self.tmp.flush()
+        Y_def, (Cb_def, Cr_def), qt_def = jpeglib.read_dct(self.tmp.name).load()
+        im.write_spatial(self.tmp.name, flags=['+DO_FANCY_DOWNSAMPLING'])
+        self.tmp.flush()
+        Y_fu, (Cb_fu, Cr_fu), qt_fu = jpeglib.read_dct(self.tmp.name).load()
+        im.write_spatial(self.tmp.name, flags=['-DO_FANCY_DOWNSAMPLING'])
+        self.tmp.flush()
+        Y_ss, (Cb_ss, Cr_ss), qt_ss = jpeglib.read_dct(self.tmp.name).load()
+
+        np.testing.assert_array_equal(Y_def, Y_fu)
+        np.testing.assert_array_equal(Cb_def, Cb_fu)
+        np.testing.assert_array_equal(Cr_def, Cr_fu)
+
+        # bug: False for some reason
+        # self.assertTrue((Y_fu != Y_ss).any())
+        # self.assertTrue((Cb_fu != Cb_ss).any())
+        # self.assertTrue((Cr_fu != Cr_ss).any())

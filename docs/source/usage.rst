@@ -19,7 +19,7 @@ Import the package with
 >>> import jpeglib
 
 .. warning::
-   
+
    Compression comes with loss and thus different jpeg implementations might
    produce slightly different results. The library *jpeglib* brings
    solution as being able to select the library in runtime.
@@ -33,7 +33,21 @@ You can specify a particular :term:`libjpeg` version to use with
 
 >>> jpeglib.version.set('6b')
 
-Currently supported versions are ``"6b"``, ``"7"``, ``"8"``, ``"8a"``, ``"8b"``, ``"8c"``, ``"8d"``, ``"9"``, ``"9a"``, ``"9b"``, ``"9c"``, ``"9d"`` , ``"9e"``, ``"turbo210"`` and ``"mozjpeg403"``. 
+Currently supported are
+
+* libjpeg versions ``6b``, ``7``, ``8``, ``8a``, ``8b``, ``8c``, ``8d``, ``9``, ``9a``, ``9b``, ``9c``, ``9d``, ``9e``,
+* libjpeg-turbo versions ``turbo120``, ``turbo130``, ``turbo140``, ``turbo150``, ``turbo200``, ``turbo210``, and
+* mozjpeg versions ``mozjpeg101``, ``mozjpeg201``, ``mozjpeg300``, and ``mozjpeg403``.
+
+.. note::
+
+   Feel free to switch to supported libjpeg-turbo versions, but do not rely that all SIMD extensions,
+   supported by libjpeg-turbo, are used.
+   An effort has been made to integrate libjpeg-turbo, but SIMD configuration is rather complex,
+   so I cannot guarrantee full support at this moment.
+
+   To see that SIMD is used at all, I measured the time of execution and compared it to libjpeg.
+   Via jpeglib on M1 Chip (Neon), libjpeg-turbo is significantly faster both in compression and decompression.
 
 Spatial domain
 --------------
@@ -52,7 +66,7 @@ Decompress input file ``input.jpeg`` into spatial representation in numpy array 
 
 The output channels depend on the source file. You can explicitly request returning RGB
 
->>> im = jpeglib.read_spatial("input.jpeg", out_color_space="JCS_RGB")
+>>> im = jpeglib.read_spatial("input.jpeg", out_color_space=jpeglib.JCS_RGB)
 >>> rgb = im.spatial
 
 For more parameters check out the documentation of the function `jpeglib.JPEG.read_spatial <https://jpeglib.readthedocs.io/en/latest/reference.html#jpeglib.functional.read_spatial>`_
@@ -68,8 +82,9 @@ Compression of a spatial domain to an output file ``output.jpeg`` is done with
 Compression parameters connected with the JPEG, such as dimensions, colorspace or markers
 are attributes of the object and can be overwritten. Others are parameters of the function.
 
->>> im.samp_factor = ((2,1),(1,1),(1,1))
->>> im.write_spatial("output.jpeg", dct_method='JDCT_IFAST')
+>>> im.samp_factor = ((1,2),(1,1),(1,1))
+>>> im.samp_factor = '4:4:0'  # alternative
+>>> im.write_spatial("output.jpeg", dct_method=jpeglib.JDCT_FLOAT)
 
 The color space is chosen based on reading. All the parameter options are listen in the
 `jpeglib.spatial_jpeg.SpatialJPEG.write_spatial <https://jpeglib.readthedocs.io/en/latest/reference.html#jpeglib.spatial_jpeg.SpatialJPEG.write_spatial>`_
@@ -108,7 +123,7 @@ Write the quantized coefficients to an output file ``output.jpeg`` with
 
 >>> im.write_dct("output.jpeg")
 
-The function reference can be found in the `jpeglib.dct_jpeg.DCTJPEG.write_dct <https://jpeglib.readthedocs.io/en/latest/reference.html#jpeglib.dct_jpeg.DCTJPEG.write_dct>`_ 
+The function reference can be found in the `jpeglib.dct_jpeg.DCTJPEG.write_dct <https://jpeglib.readthedocs.io/en/latest/reference.html#jpeglib.dct_jpeg.DCTJPEG.write_dct>`_
 documentation.
 
 jpegio format

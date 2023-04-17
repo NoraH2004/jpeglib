@@ -1,13 +1,22 @@
+"""
 
+Author: Martin Benes
+Affiliation: Universitaet Innsbruck
+"""
+
+import ctypes
+from typing import List
 from ._bind import CJpegLib
+
 
 class version:
     """Class grouping functions for controlling libjpeg method."""
-    @staticmethod
-    def set(version):
+
+    @classmethod
+    def set(cls, version: str):
         """Sets the version of libjpeg to use. Loads the library.
-        
-        :param version: libjpeg version, one of 6b, 8d, 9d, turbo210.
+
+        :param version: libjpeg version, one of 6b, 7, 8, 8a, 8b, 8c, 8d, 9, 9a, 9b, 9c, 9d, 9e, turbo120, turbo130, turbo140, turbo150, turbo200, turbo210, mozjpeg101, mozjpeg201, mozjpeg300, mozjpeg403.
         :type version: str
         :raises [NotImplementedError]: unsupported libjpeg version
 
@@ -15,6 +24,7 @@ class version:
 
         >>> import jpeglib
         >>> jpeglib.version.set('8d')
+<<<<<<< HEAD
         """
         if version in {'6','6b'}:
             CJpegLib.set_version(version='6b')
@@ -26,10 +36,40 @@ class version:
             CJpegLib.set_version(version=version)
         else:
             raise NotImplementedError(f'Unsupported libjpeg version')
+=======
+        """  # noqa: E501
+        try:
+            # libjpeg
+            if version in {
+                '6b', '7', '8', '8a', '8b', '8c', '8d',
+                '9', '9a', '9b', '9c', '9d', '9e'
+            }:
+                CJpegLib.set_version(version=version)
+            # libjpeg-turbo
+            elif version in {
+                'turbo120', 'turbo130', 'turbo140',
+                'turbo150', 'turbo200', 'turbo210',
+            }:
+                CJpegLib.set_version(version=version)
+            # mozjpeg
+            elif version in {
+                'mozjpeg101', 'mozjpeg201', 'mozjpeg300', 'mozjpeg403'
+            }:
+                CJpegLib.set_version(version=version)
+            else:
+                raise NotImplementedError(
+                    f'Unsupported libjpeg version: {version}')
+        except RuntimeError:
+            raise RuntimeError(
+                f'version "{version}" not found, '
+                'was the package compiled correctly?'
+            )
+
+>>>>>>> 4504e02b4b368ccbd41b2b5c6ef2536ae341652f
     @staticmethod
-    def get():
-        """Gets the currently used version of libjpeg. 
-        
+    def get() -> str:
+        """Gets the currently used version of libjpeg.
+
         :return: libjpeg version or None if not been loaded yet.
         :rtype: str, None
 
@@ -41,29 +81,34 @@ class version:
         '6b'
         """
         return CJpegLib.get_version()
+
     @staticmethod
-    def _jpeg_lib_version():
+    def _jpeg_lib_version() -> str:
         """Returns value of jpeg_lib_version macro."""
         return CJpegLib.jpeg_lib_version()
+
     @staticmethod
-    def _get_lib():
+    def _get_lib() -> ctypes.CDLL:
         """Low-level getter of the dynamic library.
-        
+
         :return: Dynamic library object or None if not loaded yet.
         :rtype: ctypes.CDLL, None
         """
         return CJpegLib.get()
+
     @staticmethod
-    def versions():
+    def versions() -> List[str]:
         """Lists present DLLs of versions."""
         return CJpegLib.versions()
+
     def __init__(self, version):
         """Constructor, used in with statement.
-        
+
         :param version: Version to set inside with block.
         :type version: str
         """
         self.next = version
+
     def __enter__(self):
         """Sets new version in a block.
 
@@ -79,9 +124,10 @@ class version:
         """
         self.prev = self.get()
         self.set(self.next)
+
     def __exit__(self, *args, **kw):
         """Recovers a previous version, when exiting `with` block.
-        
+
         :Example:
 
         >>> # working with 6b
@@ -94,5 +140,6 @@ class version:
         >>> # [...]
         """
         self.set(self.prev)
+
 
 __all__ = ['version']

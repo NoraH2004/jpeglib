@@ -1,44 +1,74 @@
+"""
 
+Author: Martin Benes
+Affiliation: Universitaet Innsbruck
+"""
 
 import logging
 import numpy as np
-from PIL import Image
-from scipy.stats import ttest_ind
-import sys
+import os
+from scipy.stats import ttest_1samp
+import timeit
+import tempfile
 import unittest
 
-sys.path.append('.')
 import jpeglib
 
 
 class TestPerformance(unittest.TestCase):
+    logger = logging.getLogger(__name__)
+
+    def setUp(self):
+        self.original_version = jpeglib.version.get()
+        self.tmp = tempfile.NamedTemporaryFile(suffix='.jpeg', delete=False)
+        self.tmp.close()
+
+    def tearDown(self):
+        os.remove(self.tmp.name)
+        del self.tmp
+        jpeglib.version.set(self.original_version)
+
     def test_reading(self):
-        # load and time PIL 30 times
-        pil = []
-        for _ in range(30):
-            # timing PIL
-            t_pil = jpeglib.Timer("PIL measurement")
-            im = Image.open("examples/IMG_0791.jpeg")
-            x = np.array(im)
-            t_pil.stop()
-            pil.append(t_pil.stop())
-        # load and time stegojpeg 30 times
-        stego = []
-        for _ in range(30):
-            t_stego = jpeglib.Timer("stegojpeg measurement")
-            im = jpeglib.JPEG("examples/IMG_0791.jpeg")
-            x = im.read_spatial(
-                flags=['DO_FANCY_UPSAMPLING','DO_BLOCK_SMOOTHING']
+        """Test reading is statistically significantly faster than 300ms."""
+        self.logger.info("test_reading")
+        # load and time jpeglib 50 times
+        jpeglib.version.set('turbo210')
+        res_jpeglib = timeit.repeat(
+            lambda: jpeglib.read_spatial(
+                "examples/IMG_0791.jpeg",
+                flags=['DO_FANCY_UPSAMPLING', 'DO_BLOCK_SMOOTHING']
+            ).spatial,
+            repeat=50, number=1,
+        )
+        # test in reading, jpeglin is faster than 300ms
+        faster_than_300ms = ttest_1samp(res_jpeglib, .3, alternative='less')
+        logging.info(
+            "performance of reading: %.2fs" % (
+                np.mean(res_jpeglib)
             )
-            stego.append(t_stego.stop())
-        # test it isn't more than 3x slower
-        max_3x_slower = ttest_ind(np.array(pil)*3, stego, alternative='less')
-        logging.info("performance %.2fs vs. %.2fs of PIL" % (np.mean(pil), np.mean(stego)))
-        self.assertGreater(max_3x_slower.pvalue, .05)
-    
+        )
+        self.assertLess(faster_than_300ms.pvalue, .05)
+
     def test_writing(self):
-        pass
-        # TODO
-        
+        """Test writing is statistically significantly faster than 300ms."""
+        self.logger.info("test_writing")
+        x = jpeglib.read_spatial("examples/IMG_0791.jpeg").spatial
+        jpeglib.version.set('turbo210')
+        # load and time jpeglib 50 times
+        res_jpeglib = timeit.repeat(
+            lambda: jpeglib.from_spatial(x).write_spatial(
+                self.tmp.name,
+            ),
+            repeat=50, number=1,
+        )
+        # test in writing, jpeglib is faster than 300ms
+        faster_than_300ms = ttest_1samp(res_jpeglib, .3, alternative='less')
+        logging.info(
+            "performance of writing: %.2fs" % (
+                np.mean(res_jpeglib)
+            )
+        )
+        self.assertLess(faster_than_300ms.pvalue, .05)
+
 
 __all__ = ["TestPerformance"]

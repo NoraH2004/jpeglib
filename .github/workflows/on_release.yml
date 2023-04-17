@@ -1,0 +1,154 @@
+name: Release CI/CD # workflow name
+on: # trigger
+  push:
+    branches: [release]
+  release:
+    branches: [master]
+    types:
+      - created
+
+jobs:
+
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Sources:
+          # https://github.com/scikit-learn/scikit-learn/blob/main/.github/workflows/wheels.yml
+          # https://cibuildwheel.readthedocs.io/en/stable/options/
+          # Windows
+          - os: windows-2019
+            arch: AMD64
+          - os: windows-2019
+            arch: x86
+          # MacOS
+          - os: macos-11
+            arch: x86_64
+          - os: macos-11
+            arch: arm64
+          - os: macos-11
+            arch: universal2
+          # Linux
+          - os: ubuntu-20.04
+            arch: x86_64
+          - os: ubuntu-20.04
+            arch: i686
+
+          # - os: ubuntu-20.04  # raspberry pi, takes long
+          #   arch: aarch64
+
+          # - os: ubuntu-20.04
+          #   arch: ppc64le
+          # - os: ubuntu-20.04
+          #   arch: s390x
+    steps:
+      - name: Set Github Workspace
+        uses: actions/checkout@v2
+      - name: Set up Python 3.10 # set architecture and Python3
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        uses: ./.github/common/install_dependencies
+      - name: Build wheels
+        uses: ./.github/common/build_wheels
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+  make_sdist:
+    name: Make source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Optional, use if you use setuptools_scm
+          submodules: true  # Optional, use if you have submodules
+      - name: Build SDist
+        run: pipx run build --sdist
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.tar.gz
+
+  unit_tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest # runner
+    needs: [build_wheels, make_sdist]
+    steps: # tasks
+      - name: Set Github Workspace # access Github Workspace
+        uses: actions/checkout@v2
+      - name: Set up Python 3.10 # set architecture and Python3
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+          architecture: "x64" # architecture
+      - name: Downloads artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - name: Install test dependencies
+        uses: ./.github/common/install_test_dependencies
+      - name: Install wheel
+        run: pip install --find-links ./dist jpeglib --no-index
+      - name: Run unit tests # run unittests
+        uses: ./.github/common/unit_tests
+
+
+  code_analysis:
+    name: Run code analysis
+    runs-on: ubuntu-latest # runner
+    needs: [build_wheels, make_sdist]
+    steps: # tasks
+      - name: Set Github Workspace # access Github Workspace
+        uses: actions/checkout@v2
+      - name: Set up Python 3.10 # set architecture and Python3
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+          architecture: "x64" # architecture
+      - name: Install dependencies
+        uses: ./.github/common/install_dependencies
+      - name: Run code analysis
+        uses: ./.github/common/code_quality
+
+  upload_to_test_pypi:
+    name: Upload to TestPyPi
+    needs: [build_wheels, make_sdist, unit_tests, code_analysis]
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/release' }}
+    steps:
+      - name: Downloads artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - name: Publish on TestPyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          verbose: true
+
+  upload_to_pypi:
+    name: Upload to PyPi
+    needs: [build_wheels, make_sdist, unit_tests, code_analysis]
+    runs-on: ubuntu-latest
+    if: ${{github.event_name == 'release' && github.event.action == 'created'}}
+    steps:
+      - name: Downloads artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - name: Publish on PyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          verbose: true

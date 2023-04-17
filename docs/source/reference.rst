@@ -13,7 +13,10 @@ Inside DCT domain
 .. autofunction:: jpeglib.read_dct
 
 .. autoclass:: jpeglib.DCTJPEG
-   :members: Y, Cb, Cr, qt, write_dct
+   :members: path, Y, Cb, Cr, qt, write_dct, content, height, width, height_in_blocks, width_in_blocks, num_components, num_markers, samp_factor, progressive_mode, has_chrominance, quant_tbl_no, get_component_qt
+
+.. autofunction:: jpeglib.from_dct
+
 
 Inside spatial domain
 """""""""""""""""""""
@@ -23,7 +26,8 @@ Inside spatial domain
 .. autofunction:: jpeglib.from_spatial
 
 .. autoclass:: jpeglib.SpatialJPEG
-   :members: spatial, write_spatial, color_space, dither_mode, dct_method, flags
+   :members: path, spatial, write_spatial, color_space, flags, content, height, width, height_in_blocks, width_in_blocks, num_components, num_markers, samp_factor, progressive_mode, has_chrominance
+
 
 Using jpegio interface
 """"""""""""""""""""""
@@ -33,21 +37,24 @@ Using jpegio interface
 .. autoclass:: jpeglib.DCTJPEGio
    :members: coef_arrays, quant_tables, write
 
-libjpeg-like structures
-"""""""""""""""""""""""
+
+libjpeg-like enumerations
+"""""""""""""""""""""""""
 
 .. autoclass:: jpeglib.Dithermode
-   :members: from_index, name, index, name_to_index, index_to_name, J_DITHER_MODE, iJ_DITHER_MODE
+   :members: JDITHER_NONE, JDITHER_ORDERED, JDITHER_FS
 
 .. autoclass:: jpeglib.Colorspace
-   :members: from_index, name, index, name_to_index, index_to_name, J_COLOR_SPACE, iJ_COLOR_SPACE
+   :members: JCS_UNKNOWN, JCS_GRAYSCALE, JCS_RGB, JCS_YCbCr, JCS_CMYK, JCS_YCCK, channels
 
 .. autoclass:: jpeglib.DCTMethod
-   :members: from_index, name, index, name_to_index, index_to_name, J_DCT_METHOD, iJ_DCT_METHOD
+   :members: JDCT_ISLOW, JDCT_IFAST, JDCT_FLOAT
 
 .. autoclass:: jpeglib.Marker
-   :members: from_index, name, index, name_to_index, index_to_name, J_MARKER_CODE, iJ_MARKER_CODE
+   :members: type, length, content
 
+.. autoclass:: jpeglib.MarkerType
+   :members: JPEG_RST0, JPEG_RST1, JPEG_RST2, JPEG_RST3, JPEG_RST4, JPEG_RST5, JPEG_RST6, JPEG_RST7, JPEG_RST8, JPEG_EOI, JPEG_APP0, JPEG_APP1, JPEG_APP2, JPEG_APP3, JPEG_APP4, JPEG_APP5, JPEG_APP6, JPEG_APP7, JPEG_APP8, JPEG_APP9, JPEG_APP10, JPEG_APP11, JPEG_APP12, JPEG_APP13, JPEG_APP14, JPEG_APP15, JPEG_COM
 
 
 Manage libjpeg version
@@ -57,21 +64,3 @@ Manage libjpeg version
    :members: set, get, versions
    :special-members: __enter__, __exit__
 
-
-DCT implementation
-------------------
-
-DCT implementation in 2 dimensions
-""""""""""""""""""""""""""""""""""
-
-.. autofunction:: jpeglib.dct.DCT2D
-
-.. autofunction:: jpeglib.dct.iDCT2D
-
-
-DCT implementation in 1 dimensions
-""""""""""""""""""""""""""""""""""
-
-.. autofunction:: jpeglib.dct.DCT1D
-
-.. autofunction:: jpeglib.dct.iDCT1D

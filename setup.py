@@ -1,157 +1,218 @@
 
-# versions
-from setuptools.command.build_ext import build_ext
-import re
-from pathlib import Path
-import ctypes
-import setuptools
 import codecs
+import ctypes
 import os
-__version__ = os.environ.get('VERSION_NEW', '0.10.12')
-libjpeg_versions = {
-     '6b': (None, 60),
-    # '7': (None, 70),
-    # '8': (None, 80),
-    # '8a': (None, 80),
-    # '8b': (None, 80),
-    # '8c': (None, 80),
-    # '8d': (None, 80),
-    # '9': (None, 90),
-    # '9a': (None, 90),
-    # '9b': (None, 90),
-    # '9c': (None, 90),
-    # '9d': (None, 90),
-    # '9e': (None, 90),
-     'turbo210': ('2.1.0', 210),
-     'mozjpeg101': ('1.0.1', 101),
-     'mozjpeg201': ('2.0.1', 201),
-     'mozjpeg300': ('3.0.0', 300),
-     'mozjpeg403': ('4.0.3', 403)
+from pathlib import Path
+import re
+import setuptools
+import setuptools.command.build_ext
+import sys
 
+# wheel builder
+try:
+    from wheel.bdist_wheel import bdist_wheel
+
+    class bdist_wheel_abi3(bdist_wheel):
+        def get_tag(self):
+            python, abi, plat = super().get_tag()
+            if python.startswith("cp"):
+                return "cp38", "abi3", plat
+            return python, abi, plat
+
+    custom_bdist_wheel = {'bdist_wheel': bdist_wheel_abi3}
+except ModuleNotFoundError:
+    custom_bdist_wheel = {}
+
+# versions
+__version__ = os.environ.get('VERSION_NEW', '0.12.5')
+libjpeg_versions = {
+    '6b': (None, 60),
+    '7': (None, 70),
+    '8': (None, 80),
+    '8a': (None, 80),
+    '8b': (None, 80),
+    '8c': (None, 80),
+    '8d': (None, 80),
+    '9': (None, 90),
+    '9a': (None, 90),
+    '9b': (None, 90),
+    '9c': (None, 90),
+    '9d': (None, 90),
+    '9e': (None, 90),
+    'turbo120': ('1.2.0', 3120),
+    'turbo130': ('1.3.0', 3130),
+    'turbo140': ('1.4.0', 3140),
+    'turbo150': ('1.5.0', 3150),
+    'turbo200': ('2.0.0', 3200),
+    'turbo210': ('2.1.0', 3210),
+    'mozjpeg101': ('1.0.1', 6101),
+    'mozjpeg201': ('2.0.1', 6201),
+    'mozjpeg300': ('3.0.0', 6300),
+    'mozjpeg403': ('4.0.3', 6403),
 }
 
 # requirements
 try:
     with open('requirements.txt') as f:
         reqs = f.read().splitlines()
-except:
+except FileNotFoundError:
     reqs = ['numpy']
 
+# description
 with codecs.open("README.md", "r", encoding="UTF-8") as fh:
     long_description = fh.read()
 
 # create version dependent extensions
-cfiles = {}
-hfiles = {}
+cfiles, hfiles = {}, {}
 cjpeglib = {}
 for v in libjpeg_versions:
-    is_moz = v[:3] == "moz"
-    is_turbo = v[:5] == "turbo" or is_moz
 
+    # library-dependent
+    is_moz = v[:3] == "moz"
+    is_turbo_moz = v[:5] == "turbo" or is_moz
+
+    # name of C library
     clib = f'jpeglib/cjpeglib/{v}'
 
     # create missing
     package_name = 'libjpeg'
     (Path(clib) / 'jconfig.h').touch()
-    (Path(clib) / 'vjpeglib.h').touch()
-    if is_turbo:
+    (Path(clib) / 'config.h').touch()
+    if True:  # not (Path(clib) / 'vjpeglib.h').exists():
+        with open(Path(clib) / 'vjpeglib.h', 'w') as f:
+            f.write('#include "jpeglib.h"')
+    if is_turbo_moz:
         package_name += '-turbo'
         (Path(clib) / 'jconfigint.h').touch()
-    if is_moz:
-        (Path(clib) / 'config.h').touch()
+        if is_moz:
+            package_name = 'mozjpeg'
+            (Path(clib) / 'config.h').touch()
 
+    # get all files
     files = [
-        f'{clib}/{f}' for f in os.listdir(clib) if re.fullmatch(f'.*\.(c|h)', f)]
-    for excluded_module in ['jmemdos', 'jmemmac', 'jmemansi', 'ansi2knr', 'ckconfig', 'jmemname',  # platform dependents
-                            'djpeg', 'cjpeg', 'rdjpgcom', 'wrjpgcom', 'cdjpeg', 'jpegtran',  # executables
-                            'rdbmp', 'wrbmp', 'rdcolmap', 'rdppm', 'wrppm', 'rdtarga', 'wrtarga', 'rdrle', 'wrrle', 'rdgif', 'wrgif', 'rdswitch',  # others
-                            'example',  # example
-                            'cjpegalt', 'djpegalt',
-                            # 'jerror',
-                            # turbo
-                            'jccolext', 'jdcolext', 'jdcol565', 'jstdhuff',
-                            'jdmrg565', 'jdmrgext', "jcstest", "tjunittest", "tjbench",
-                            'turbojpeg-jni', 'turbojpeg',
-                            'bmp', 'jpegyuv']:
+        f'{clib}/{f}'
+        for f in os.listdir(clib)
+        if re.fullmatch(r'.*\.(c|h)', f)
+    ]
+    # exclude files
+    for excluded_module in [
+        # platform dependents
+        'jmemdos', 'jmemmac', 'jmemansi',
+        'ansi2knr', 'ckconfig', 'jmemname',
+        # executables
+        'djpeg', 'cjpeg', 'rdjpgcom',
+        'wrjpgcom', 'cdjpeg', 'jpegtran',
+        # others
+        'rdbmp', 'wrbmp', 'rdcolmap',
+        'rdppm', 'wrppm', 'rdtarga',
+        'wrtarga', 'rdrle', 'wrrle',
+        'rdgif', 'wrgif', 'rdswitch',
+        # example
+        'example',
+        #
+        'cjpegalt', 'djpegalt',
+        # turbo
+        'jccolext', 'jdcolext', 'jdcol565',
+        'jstdhuff', 'jdmrg565', 'jdmrgext',
+        'jcstest', 'tjunittest', 'tjbench',
+        'turbojpeg-jni', 'turbojpeg', 'turbojpegl',
+        'jpegut', 'jpgtest',
+        # mozjpeg
+        'bmp', 'jpegyuv',
+    ]:
         lim = -2 - len(excluded_module)
         files = [f for f in files if f[lim:-2] != excluded_module]
-    #
+    # split to sources and headers
     cfiles[v] = [f for f in files if f[-2:] == '.c']
     hfiles[v] = [f for f in files if f[-2:] == '.h']
-    sources = ['jpeglib/cjpeglib/cjpeglib.c', *cfiles[v]]
+    sources = cfiles[v]
+    hfiles[v].append('jpeglib/cjpeglib/cjpeglib_common.h')
+    hfiles[v].append('jpeglib/cjpeglib/cjpeglib_common_flags.h')
+    hfiles[v].append('jpeglib/cjpeglib/cjpeglib_common_markers.h')
+    sources.append('jpeglib/cjpeglib/cjpeglib_dct.cpp')
+    sources.append('jpeglib/cjpeglib/cjpeglib_spatial.cpp')
+    sources.append('jpeglib/cjpeglib/cjpeglib_common_flags.c')
+    sources.append('jpeglib/cjpeglib/cjpeglib_common_markers.cpp')
+    sources.append('jpeglib/cjpeglib/cjpeglib_common.cpp')
 
+    # define macros
     macros = [
         ("BITS_IN_JSAMPLE", 8),
+        ("HAVE_UNSIGNED_CHAR", 1),
         ("HAVE_STDLIB_H", 1),
         ("LIBVERSION", libjpeg_versions[v][1]),
         ("HAVE_PROTOTYPES", 1),
+        ("Py_LIMITED_API", "0x03080000"),
     ]
-    if is_turbo:
+    # turbo/moz-only macros
+    if is_turbo_moz:
         macros += [
-            ("INLINE", "__inline__"),
+            ("INLINE", "__inline__" if not sys.platform.startswith("win") else "__inline"),
             ("PACKAGE_NAME", f"\"{package_name}\""),
-            ("BUILD", f"\"unknown\""),
+            ("BUILD", "\"unknown\""),
             ("VERSION", f"\"{libjpeg_versions[v][0]}\""),
             ("SIZEOF_SIZE_T", int(ctypes.sizeof(ctypes.c_size_t))),
-            ("THREAD_LOCAL", "__thread")
+            ("THREAD_LOCAL", "__thread"),
+            ("C_ARITH_CODING_SUPPORTED", 1),
+            ("D_ARITH_CODING_SUPPORTED", 1),
+            ("JPEG_LIB_VERSION", 70),  # 70), # turbo 2.1.0
         ]
-        if not is_moz:
+        # moz-only macros
+        if is_moz:
             macros += [
-                ("JPEG_LIB_VERSION", 80),  # 70),
+                # ("JPEG_LIB_VERSION", 69),
+                ('MEM_SRCDST_SUPPORTED', 1),
             ]
-    if is_moz:
-        macros += [
-            ("JPEG_LIB_VERSION", 69),  
-            ('C_ARITH_CODING_SUPPORTED', 1),
-            ('MEM_SRCDST_SUPPORTED', 1)
-        ]
+        # if not is_moz or libjpeg_versions[v][1] <= 403:
+        #     macros += [
+        #         ("JPEG_LIB_VERSION", 70),  # 70), # turbo 2.1.0
+        #     ]
 
+    # define the extension
     cjpeglib[v] = setuptools.Extension(
         name=f"jpeglib/cjpeglib/cjpeglib_{v}",
-        library_dirs=['./jpeglib/cjpeglib', f'./{clib}'],  # [f'./{clib}'],
-        include_dirs=['./jpeglib/cjpeglib', f'./{clib}'],  # [f'./{clib}'],
+        library_dirs=['./jpeglib/cjpeglib', f'./{clib}'],
+        include_dirs=['./jpeglib/cjpeglib', f'./{clib}'],
         sources=sources,
         headers=hfiles[v],
         define_macros=macros,
-        extra_compile_args=["-fPIC", "-g"],
-        language="c",
+        extra_compile_args=[] if sys.platform.startswith("win") else ["-fPIC", "-g"],
+        # language='C++',
+        py_limited_api=True,
     )
 
 
-class custom_build_ext(build_ext):
+# extension builder
+class custom_build_ext(setuptools.command.build_ext.build_ext):
+    def get_export_symbols(self, ext):
+        parts = ext.name.split(".")
+        if parts[-1] == "__init__":
+            initfunc_name = "PyInit_" + parts[-2]
+        else:
+            initfunc_name = "PyInit_" + parts[-1]
+
     def build_extensions(self):
-        #self.compiler.set_executable("compiler_so", "g++")
-        #self.compiler.set_executable("compiler_cxx", "g++")
-        #self.compiler.set_executable("linker_so", "g++")
-        # 'add_include_dir', 'add_library', 'add_library_dir', 'add_link_object', 'add_runtime_library_dir',
-        # 'announce', 'archiver', 'compile', 'compiler', 'compiler_cxx', 'compiler_so', 'compiler_type',
-        # 'create_static_lib', 'debug_print', 'define_macro', 'detect_language', 'dry_run', 'dylib_lib_extension',
-        # 'dylib_lib_format', 'exe_extension', 'executable_filename', 'executables', 'execute', 'find_library_file',
-        # 'force', 'has_function', 'include_dirs', 'language_map', 'language_order', 'libraries', 'library_dir_option',
-        # 'library_dirs', 'library_filename', 'library_option', 'link', 'link_executable', 'link_shared_lib',
-        # 'link_shared_object', 'linker_exe', 'linker_so', 'macros', 'mkpath', 'move_file', 'obj_extension',
-        # 'object_filenames', 'objects', 'output_dir', 'preprocess', 'preprocessor', 'ranlib', 'runtime_library_dir_option',
-        # 'runtime_library_dirs', 'set_executable', 'set_executables', 'set_include_dirs', 'set_libraries', 'set_library_dirs',
-        # 'set_link_objects', 'set_runtime_library_dirs', 'shared_lib_extension', 'shared_lib_format', 'shared_object_filename',
-        # 'spawn', 'src_extensions', 'static_lib_extension', 'static_lib_format', 'undefine_macro', 'verbose', 'warn',
-        # 'xcode_stub_lib_extension', 'xcode_stub_lib_format'
-        #print("==========", self.compiler.library_dirs)
-        build_ext.build_extensions(self)
+        setuptools.command.build_ext.build_ext.build_extensions(self)
+        setuptools.command.build_ext.build_ext.get_export_symbols = self.get_export_symbols
 
 
+# define package
 setuptools.setup(
     name='jpeglib',
     version=__version__,
     author=u'Martin Beneš',
     author_email='martinbenes1996@gmail.com',
-    description='Python envelope for the popular C library libjpeg for handling JPEG files.',
+    description="Python envelope for the popular C library" +
+                "libjpeg for handling JPEG files.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     license='MPL',
-    #test_suite = 'setup.test_suite',
-    url='https://jpeglib.readthedocs.io/en/latest/',
-    #download_url = 'https://github.com/martinbenes1996/jpeglib/archive/0.1.0.tar.gz',
+    project_urls={
+        "Homepage": "https://pypi.org/project/jpeglib/",
+        "Documentation": 'https://jpeglib.readthedocs.io/en/latest/',
+        "Source": "https://github.com/martinbenes1996/jpeglib/",
+    },
     keywords=['jpeglib', 'jpeg', 'jpg', 'libjpeg', 'compression',
               'decompression', 'dct-coefficients', 'dct'],
     install_requires=reqs,
@@ -159,7 +220,10 @@ setuptools.setup(
     package_data={'': ['data/*']},
     include_package_data=True,
     ext_modules=[cjpeglib[v] for v in libjpeg_versions],
-    cmdclass={"build_ext": custom_build_ext},
+    cmdclass={
+        "build_ext": custom_build_ext,
+        **custom_bdist_wheel
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
@@ -173,9 +237,9 @@ setuptools.setup(
         'Programming Language :: C',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.9',
         'Topic :: Education',
         'Topic :: Multimedia',
+        'Topic :: Multimedia :: Graphics',
         'Topic :: Multimedia :: Graphics :: Graphics Conversion',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Image Processing',
@@ -184,6 +248,6 @@ setuptools.setup(
         'Topic :: Security',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Utilities'
+        'Topic :: Utilities',
     ],
 )
